@@ -19,11 +19,9 @@ services:
     container_name: nodejs_backend
     ports:
       - "3000:3000"
-    environment:
-      - PORT=3000
-      - PYTHON_AI_URL=http://python_ai:8000
-      - JWT_SECRET=super_secret_key_123
-      # Add your MongoDB connection string here before running in production!
+    env_file:
+      - .env
+      # Add your MongoDB connection string to the .env file before running in production!
       # For now, it will use the hardcoded one in your db.connect.js
     depends_on:
       - python_ai
