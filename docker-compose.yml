@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  python_ai:
+    build:
+      context: ./Khatwaat-Ai-main/backend
+      dockerfile: Dockerfile
+    container_name: python_ai
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: always
+
+  nodejs_backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nodejs_backend
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - PYTHON_AI_URL=http://python_ai:8000
+      - JWT_SECRET=super_secret_key_123
+      # Add your MongoDB connection string here before running in production!
+      # For now, it will use the hardcoded one in your db.connect.js
+    depends_on:
+      - python_ai
+    restart: always
