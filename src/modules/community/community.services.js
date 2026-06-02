@@ -40,7 +40,7 @@ export const getPaginatedPosts = async (req, res, next) => {
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(parseInt(limit));
-            
+
         const total = await PostModel.countDocuments();
 
         res.status(200).json({
@@ -59,11 +59,11 @@ export const getPostById = async (req, res, next) => {
     try {
         const { id } = req.params;
         const post = await PostModel.findById(id).populate('userId', 'email name');
-        
+
         if (!post) {
             return res.status(404).json({ message: 'Post not found' });
         }
-        
+
         res.status(200).json({ post });
     } catch (error) {
         console.error('Error getting post:', error);
@@ -81,7 +81,7 @@ export const deletePost = async (req, res, next) => {
         }
 
         const post = await PostModel.findOneAndDelete({ _id: id, userId });
-        
+
         if (!post) {
             return res.status(404).json({ message: 'Post not found or you are not the owner' });
         }
@@ -111,7 +111,7 @@ export const toggleLike = async (req, res, next) => {
         }
 
         const likeIndex = post.likes.indexOf(userId);
-        
+
         if (likeIndex === -1) {
             // User hasn't liked it yet, so add the like
             post.likes.push(userId);
@@ -119,9 +119,9 @@ export const toggleLike = async (req, res, next) => {
             // User already liked it, so remove the like
             post.likes.splice(likeIndex, 1);
         }
-        
+
         await post.save();
-        
+
         res.status(200).json({
             message: likeIndex === -1 ? 'Post liked' : 'Post unliked',
             likesCount: post.likes.length,

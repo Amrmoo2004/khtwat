@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 const examSessionSchema = new Schema({
     studentId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    subject: { type: String, required: true },
+    subjects: [{ type: String, required: true }],
     status: { type: String, enum: ['active', 'completed'], default: 'active' },
     responses: [{
         question_id: String,

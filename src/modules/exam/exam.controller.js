@@ -6,20 +6,26 @@ const PYTHON_AI_URL = process.env.PYTHON_AI_URL || 'http://localhost:8000';
 
 export const startExam = async (req, res) => {
     try {
-        const { subject, max_questions = 20, target_se = 0.3 } = req.body;
+        const { subjects, max_questions = 20, target_se = 0.3 } = req.body;
         // User ID comes from the JWT token via the auth middleware
         const userId = req.user.id;
 
-        // 1. Fetch all questions for this subject from MongoDB
-        const questions = await QuestionModel.find({ subject: subject.toUpperCase() });
+        if (!subjects || !Array.isArray(subjects) || subjects.length === 0) {
+            return res.status(400).json({ message: "Please provide an array of 'subjects'." });
+        }
+
+        const upperSubjects = subjects.map(s => s.toUpperCase());
+
+        // 1. Fetch all questions for these subjects from MongoDB
+        const questions = await QuestionModel.find({ subject: { $in: upperSubjects } });
         
         if (!questions || questions.length === 0) {
-            return res.status(404).json({ message: `No questions found for subject ${subject}` });
+            return res.status(404).json({ message: `No questions found for subjects: ${upperSubjects.join(', ')}` });
         }
 
         // 2. Call Python AI to initialize the session and get the first question
         const aiResponse = await axios.post(`${PYTHON_AI_URL}/exam/start`, {
-            subject: subject.toUpperCase(),
+            subjects: upperSubjects,
             max_questions,
             target_se,
             user_id: userId,
@@ -50,7 +56,7 @@ export const startExam = async (req, res) => {
         // 3. Create a new Exam Session in MongoDB
         const newSession = new ExamSessionModel({
             studentId: userId,
-            subject: subject.toUpperCase(),
+            subjects: upperSubjects,
             status: 'active',
             responses: []
         });
