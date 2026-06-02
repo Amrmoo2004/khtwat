@@ -66,6 +66,21 @@ const options = {
             phone: { type: 'string', example: '01012345678' },
             age: { type: 'integer', example: 20 }
           }
+        },
+        CreatePostRequest: {
+          type: 'object',
+          required: ['content'],
+          properties: {
+            content: { type: 'string', example: 'Hello Community! What is the best way to study Math?' },
+            tags: { type: 'array', items: { type: 'string' }, example: ['math', 'study'] }
+          }
+        },
+        CreateCommentRequest: {
+          type: 'object',
+          required: ['content'],
+          properties: {
+            content: { type: 'string', example: 'I found solving past papers very helpful.' }
+          }
         }
       }
     },
@@ -261,6 +276,74 @@ const options = {
           tags: ['Recommendations'],
           security: [{ bearerAuth: [] }],
           responses: { 200: { description: 'Returns predicted academic track' } }
+        }
+      },
+      '/community/posts': {
+        get: {
+          summary: 'Get all posts paginated',
+          tags: ['Community'],
+          parameters: [
+            { name: 'page', in: 'query', schema: { type: 'integer', default: 1 } },
+            { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 } }
+          ],
+          responses: { 200: { description: 'Returns a list of posts' } }
+        },
+        post: {
+          summary: 'Create a new post',
+          tags: ['Community'],
+          security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/CreatePostRequest' } } }
+          },
+          responses: { 201: { description: 'Post created successfully' } }
+        }
+      },
+      '/community/posts/{id}': {
+        get: {
+          summary: 'Get a post by ID',
+          tags: ['Community'],
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { 200: { description: 'Returns the post' }, 404: { description: 'Post not found' } }
+        },
+        delete: {
+          summary: 'Delete a post',
+          tags: ['Community'],
+          security: [{ bearerAuth: [] }],
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { 200: { description: 'Post deleted successfully' }, 404: { description: 'Post not found' } }
+        }
+      },
+      '/community/posts/{id}/like': {
+        put: {
+          summary: 'Toggle like on a post',
+          tags: ['Community'],
+          security: [{ bearerAuth: [] }],
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { 200: { description: 'Returns like status' }, 404: { description: 'Post not found' } }
+        }
+      },
+      '/community/posts/{id}/comments': {
+        get: {
+          summary: 'Get comments for a post',
+          tags: ['Community'],
+          parameters: [
+            { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
+            { name: 'page', in: 'query', schema: { type: 'integer', default: 1 } },
+            { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 } }
+          ],
+          responses: { 200: { description: 'Returns comments' } }
+        },
+        post: {
+          summary: 'Add a comment to a post',
+          tags: ['Community'],
+          security: [{ bearerAuth: [] }],
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          requestBody: {
+            required: true,
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/CreateCommentRequest' } } }
+          },
+          responses: { 201: { description: 'Comment added successfully' } }
         }
       }
     }

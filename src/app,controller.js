@@ -7,6 +7,7 @@ import examRoutes from './modules/exam/exam.routes.js';
 import antiCheatRoutes from './modules/antiCheat/antiCheat.routes.js';
 import analyticsRoutes from './modules/analytics/analytics.routes.js';
 import recommendationsRoutes from './modules/recommendations/recommendations.routes.js';
+import communityRoutes from './modules/community/community.routes.js';
 import cors from 'cors';
 
 import swaggerUi from 'swagger-ui-express';
@@ -38,6 +39,9 @@ export const bootstrap =async () => {
     
     // Recommendations routes
     app.use('/recommendations', recommendationsRoutes);
+    
+    // Community routes
+    app.use('/community', communityRoutes);
     
     // Swagger API Documentation
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
