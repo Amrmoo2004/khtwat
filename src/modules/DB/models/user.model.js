@@ -20,9 +20,8 @@ const userSchema = new Schema({
   },
   age: {
     type: Number,
-    min: 18,
     max: 60,
-    required: false // Optional since not marked as required in your original
+    required: false
   },
   phone: {
     type: String,
