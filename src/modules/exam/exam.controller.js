@@ -6,7 +6,7 @@ const PYTHON_AI_URL = process.env.PYTHON_AI_URL || 'http://localhost:8000';
 
 export const startExam = async (req, res) => {
     try {
-        const { subjects, max_questions = 20, target_se = 0.3 } = req.body;
+        const { subjects, max_questions_per_subject = 20, target_se = 0.3 } = req.body;
         // User ID comes from the JWT token via the auth middleware
         const userId = req.user.id;
 
@@ -15,6 +15,9 @@ export const startExam = async (req, res) => {
         }
 
         const upperSubjects = subjects.map(s => s.toUpperCase());
+        
+        // 20 questions per subject → total = 20 × number of subjects
+        const totalMaxQuestions = max_questions_per_subject * upperSubjects.length;
 
         // 1. Fetch all questions for these subjects from MongoDB
         const questions = await QuestionModel.find({ subject: { $in: upperSubjects } });
@@ -26,7 +29,7 @@ export const startExam = async (req, res) => {
         // 2. Call Python AI to initialize the session and get the first question
         const aiResponse = await axios.post(`${PYTHON_AI_URL}/exam/start`, {
             subjects: upperSubjects,
-            max_questions,
+            max_questions: totalMaxQuestions,
             target_se,
             user_id: userId,
             questions: questions.map(q => ({
