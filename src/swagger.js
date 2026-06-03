@@ -33,7 +33,7 @@ const options = {
           properties: {
             subjects: { type: 'array', items: { type: 'string' }, example: ['MATH', 'ARABIC', 'IQ', 'ENGLISH', 'SCIENCE'] },
             userId: { type: 'string', example: '60d0fe4f5311236168a109ca', description: 'Optional if using Bearer token later' },
-            max_questions: { type: 'integer', example: 20 },
+            max_questions_per_subject: { type: 'integer', example: 20 },
             target_se: { type: 'number', example: 0.3 }
           }
         },
