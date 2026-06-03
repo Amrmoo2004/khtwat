@@ -3,7 +3,8 @@ const { Schema } = mongoose;
 
 const examSessionSchema = new Schema({
     studentId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    subjects: [{ type: String, required: true }],
+    subject: { type: String },  // Legacy field for old single-subject sessions
+    subjects: [{ type: String }],  // New field for multi-subject sessions
     status: { type: String, enum: ['active', 'completed'], default: 'active' },
     responses: [{
         question_id: String,

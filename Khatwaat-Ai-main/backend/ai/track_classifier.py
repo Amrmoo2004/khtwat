@@ -107,12 +107,12 @@ def get_track_prediction(subject_thetas: Dict[str, float]) -> dict:
     """
     tracks = classify_track(subject_thetas)
     
-    if not tracks:
+    if not tracks or not subject_thetas or all(abs(t) < 0.05 for t in subject_thetas.values()):
         return {
-            "predicted_track": None,
-            "confidence": 0,
-            "all_tracks": [],
-            "reasoning": "Insufficient data for prediction"
+            "predicted_track": "Insufficient Data",
+            "confidence": 0.0,
+            "all_tracks": [{"track": t, "confidence": 0.0} for t in TRACK_PROFILES.keys()],
+            "reasoning": "You need to take exams in multiple subjects to get a real prediction."
         }
     
     predicted_track, confidence = tracks[0]
@@ -121,12 +121,15 @@ def get_track_prediction(subject_thetas: Dict[str, float]) -> dict:
     sorted_subjects = sorted(subject_thetas.items(), key=lambda x: x[1], reverse=True)
     strong_subjects = [s for s, t in sorted_subjects if t > 0.5]
     weak_subjects = [s for s, t in sorted_subjects if t < -0.5]
+    average_subjects = [s for s, t in sorted_subjects if -0.5 <= t <= 0.5]
     
     reasoning_parts = []
     if strong_subjects:
         reasoning_parts.append(f"Strong performance in: {', '.join(strong_subjects)}")
     if weak_subjects:
         reasoning_parts.append(f"Needs improvement in: {', '.join(weak_subjects)}")
+    if not strong_subjects and not weak_subjects and average_subjects:
+        reasoning_parts.append(f"Average performance across: {', '.join(average_subjects)}")
     reasoning_parts.append(f"Best fit: {predicted_track} (confidence: {confidence:.0%})")
     
     return {

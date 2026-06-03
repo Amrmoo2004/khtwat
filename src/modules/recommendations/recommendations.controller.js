@@ -3,6 +3,47 @@ import { ExamSessionModel } from '../DB/models/examSession.model.js';
 
 const PYTHON_AI_URL = process.env.PYTHON_AI_URL || 'http://localhost:8000';
 
+/**
+ * Build subject_thetas map from completed exam sessions.
+ * 
+ * Old sessions have `subject` (string), new sessions have `subjects` (array).
+ * For multi-subject sessions we use the single estimated_theta as a shared estimate
+ * for every subject in that session (best we can do without per-subject theta stored).
+ * For single-subject sessions we map it directly.
+ * 
+ * Only the latest theta per subject is kept (sessions are sorted newest-first).
+ */
+function buildSubjectThetas(sessions) {
+    const subject_thetas = {};
+
+    for (const session of sessions) {
+        if (!session.final_result || session.final_result.estimated_theta == null) {
+            continue;
+        }
+
+        const theta = session.final_result.estimated_theta;
+
+        // Support both old schema (subject) and new schema (subjects)
+        let subjectList = [];
+        if (session.subjects && Array.isArray(session.subjects) && session.subjects.length > 0) {
+            subjectList = session.subjects;
+        } else if (session.subject) {
+            subjectList = [session.subject];
+        }
+
+        for (const subj of subjectList) {
+            if (!subj || subj === 'undefined') continue; // Skip bad data
+            const key = subj.toUpperCase();
+            // Only take the latest theta for each subject (sessions are sorted newest-first)
+            if (subject_thetas[key] === undefined) {
+                subject_thetas[key] = theta;
+            }
+        }
+    }
+
+    return subject_thetas;
+}
+
 export const getRecommendations = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -11,14 +52,16 @@ export const getRecommendations = async (req, res) => {
         const sessions = await ExamSessionModel.find({ studentId: userId, status: 'completed' })
             .sort({ createdAt: -1 });
 
-        const subject_thetas = {};
+        const subject_thetas = buildSubjectThetas(sessions);
 
-        for (const session of sessions) {
-            const subj = session.subject;
-            // Only take the latest theta for each subject
-            if (subject_thetas[subj] === undefined && session.final_result) {
-                subject_thetas[subj] = session.final_result.estimated_theta;
-            }
+        if (Object.keys(subject_thetas).length === 0) {
+            return res.status(200).json({
+                short_term: [],
+                long_term: [],
+                predicted_track: null,
+                track_confidence: null,
+                message: "Take exams in multiple subjects to get personalized recommendations."
+            });
         }
 
         // Call Python AI to generate recommendations
@@ -42,13 +85,14 @@ export const getTrackPrediction = async (req, res) => {
         const sessions = await ExamSessionModel.find({ studentId: userId, status: 'completed' })
             .sort({ createdAt: -1 });
 
-        const subject_thetas = {};
+        const subject_thetas = buildSubjectThetas(sessions);
 
-        for (const session of sessions) {
-            const subj = session.subject;
-            if (subject_thetas[subj] === undefined && session.final_result) {
-                subject_thetas[subj] = session.final_result.estimated_theta;
-            }
+        if (Object.keys(subject_thetas).length === 0) {
+            return res.status(200).json({
+                predicted_track: null,
+                confidence: 0,
+                message: "Insufficient data. Take exams first."
+            });
         }
 
         const aiResponse = await axios.post(`${PYTHON_AI_URL}/recommendations/track`, {
@@ -62,3 +106,4 @@ export const getTrackPrediction = async (req, res) => {
         return res.status(500).json({ message: "Failed to get AI track prediction", error: error.message });
     }
 };
+

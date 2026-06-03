@@ -77,7 +77,8 @@ class IRTEngine2PL:
             IRTEngine2PL._log_likelihood_ability, 
             x0=[initial_theta], 
             args=(responses, a_params, b_params, c_params),
-            method='BFGS'
+            method='L-BFGS-B',
+            bounds=[(-4.0, 4.0)]
         )
         return res.x[0]
 
