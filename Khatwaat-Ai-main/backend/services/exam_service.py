@@ -186,6 +186,44 @@ class ExamService:
         )
         final_se = 1.0 / np.sqrt(total_info) if total_info > 0 else float('inf')
         
+        # ---- Per-Subject Theta Calculation ----
+        # Group responses by subject so the recommendation engine gets a theta per subject
+        subject_data = {}  # subject -> { responses: [], a: [], b: [], c: [] }
+        
+        for i, qid in enumerate(state["history_questions"]):
+            q = state["questions"].get(qid)
+            if q and "metadata" in q and "subject" in q["metadata"]:
+                subj = q["metadata"]["subject"].upper()
+            else:
+                subj = "UNKNOWN"
+            
+            if subj not in subject_data:
+                subject_data[subj] = {"responses": [], "a": [], "b": [], "c": []}
+            
+            subject_data[subj]["responses"].append(state["history_responses"][i])
+            subject_data[subj]["a"].append(state["history_a"][i])
+            subject_data[subj]["b"].append(state["history_b"][i])
+            subject_data[subj]["c"].append(state["history_c"][i])
+        
+        per_subject_thetas = {}
+        for subj, data in subject_data.items():
+            if subj == "UNKNOWN" or len(data["responses"]) == 0:
+                continue
+            try:
+                subj_theta = float(IRTEngine2PL.estimate_ability(
+                    np.array(data["responses"]),
+                    np.array(data["a"]),
+                    np.array(data["b"]),
+                    np.array(data["c"]),
+                    initial_theta=0.0
+                ))
+                per_subject_thetas[subj] = round(subj_theta, 4)
+            except Exception:
+                # Fallback: use raw percentage as a rough estimate mapped to theta scale
+                raw = sum(data["responses"]) / len(data["responses"])
+                per_subject_thetas[subj] = round((raw - 0.5) * 4, 4)  # Maps 0->-2, 0.5->0, 1->2
+        # ---- End Per-Subject ----
+        
         result = {
             "session_id": session_id,
             "subjects": state["subjects"],
@@ -194,6 +232,7 @@ class ExamService:
             "raw_percentage": round((correct / total_q * 100) if total_q > 0 else 0, 2),
             "final_theta": round(state["theta"], 4),
             "final_se": round(final_se, 4),
+            "per_subject_thetas": per_subject_thetas,
             "start_time": datetime.fromtimestamp(state["start_time"], tz=timezone.utc).isoformat(),
             "end_time": datetime.fromtimestamp(end_time, tz=timezone.utc).isoformat(),
             "duration_seconds": round(end_time - state["start_time"], 2)

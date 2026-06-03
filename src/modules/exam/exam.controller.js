@@ -124,6 +124,7 @@ export const submitAnswer = async (req, res) => {
                 estimated_theta: receipt.final_theta,
                 standard_error: receipt.final_se,
                 total_questions: receipt.total_questions,
+                per_subject_thetas: receipt.per_subject_thetas || {},
                 exam_receipt: receipt
             };
             

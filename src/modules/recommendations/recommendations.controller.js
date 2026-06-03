@@ -6,10 +6,9 @@ const PYTHON_AI_URL = process.env.PYTHON_AI_URL || 'http://localhost:8000';
 /**
  * Build subject_thetas map from completed exam sessions.
  * 
- * Old sessions have `subject` (string), new sessions have `subjects` (array).
- * For multi-subject sessions we use the single estimated_theta as a shared estimate
- * for every subject in that session (best we can do without per-subject theta stored).
- * For single-subject sessions we map it directly.
+ * Priority order for each subject's theta:
+ * 1. per_subject_thetas (computed by Python AI per subject) — most accurate
+ * 2. estimated_theta shared across all subjects in the session — fallback
  * 
  * Only the latest theta per subject is kept (sessions are sorted newest-first).
  */
@@ -17,10 +16,24 @@ function buildSubjectThetas(sessions) {
     const subject_thetas = {};
 
     for (const session of sessions) {
-        if (!session.final_result || session.final_result.estimated_theta == null) {
-            continue;
+        if (!session.final_result) continue;
+
+        // Priority 1: Use per_subject_thetas if available (new multi-subject sessions)
+        const perSubject = session.final_result.per_subject_thetas;
+        if (perSubject && (perSubject instanceof Map ? perSubject.size > 0 : Object.keys(perSubject).length > 0)) {
+            const entries = perSubject instanceof Map ? perSubject.entries() : Object.entries(perSubject);
+            for (const [subj, theta] of entries) {
+                if (!subj || subj === 'undefined' || theta == null) continue;
+                const key = subj.toUpperCase();
+                if (subject_thetas[key] === undefined) {
+                    subject_thetas[key] = theta;
+                }
+            }
+            continue; // per_subject_thetas covers this session fully
         }
 
+        // Priority 2: Fallback to shared estimated_theta for old sessions
+        if (session.final_result.estimated_theta == null) continue;
         const theta = session.final_result.estimated_theta;
 
         // Support both old schema (subject) and new schema (subjects)
@@ -32,9 +45,8 @@ function buildSubjectThetas(sessions) {
         }
 
         for (const subj of subjectList) {
-            if (!subj || subj === 'undefined') continue; // Skip bad data
+            if (!subj || subj === 'undefined') continue;
             const key = subj.toUpperCase();
-            // Only take the latest theta for each subject (sessions are sorted newest-first)
             if (subject_thetas[key] === undefined) {
                 subject_thetas[key] = theta;
             }

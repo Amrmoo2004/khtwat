@@ -17,6 +17,7 @@ const examSessionSchema = new Schema({
         estimated_theta: Number,
         standard_error: Number,
         total_questions: Number,
+        per_subject_thetas: { type: Map, of: Number },  // e.g. { "MATH": 1.2, "ARABIC": -0.3 }
         exam_receipt: Object 
     }
 }, { timestamps: true });
