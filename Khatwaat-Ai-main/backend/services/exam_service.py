@@ -15,10 +15,10 @@ class ExamService:
     _active_sessions = {}
     
     @classmethod
-    def start_exam(cls, user_id: str, subject: str, questions: list, max_questions: int = 20, target_se: float = 0.3):
+    def start_exam(cls, user_id: str, subjects: list, questions: list, max_questions: int = 20, target_se: float = 0.3):
         """Initialize a new adaptive exam session."""
         if not questions:
-            raise ValueError(f"No questions provided for subject '{subject}'")
+            raise ValueError(f"No questions provided for subjects '{subjects}'")
             
         session_id = f"SESSION_{user_id[:8]}_{int(time.time())}"
         
@@ -37,7 +37,7 @@ class ExamService:
             "start_time": time.time(),
             "current_question": None,
             "current_question_start": None,
-            "subject": subject,
+            "subjects": subjects,
             "user_id": user_id
         }
         
@@ -188,7 +188,7 @@ class ExamService:
         
         result = {
             "session_id": session_id,
-            "subject": state["subject"],
+            "subjects": state["subjects"],
             "total_questions": total_q,
             "correct_answers": correct,
             "raw_percentage": round((correct / total_q * 100) if total_q > 0 else 0, 2),

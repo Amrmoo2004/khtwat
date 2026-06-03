@@ -36,7 +36,7 @@ async def start_exam(req: StartExamRequest):
     try:
         session_id, first_q, total = ExamService.start_exam(
             user_id=req.user_id,
-            subject=req.subject.upper(),
+            subjects=req.subjects,
             questions=req.questions,
             max_questions=req.max_questions,
             target_se=req.target_se
@@ -44,7 +44,7 @@ async def start_exam(req: StartExamRequest):
         
         return ExamStartResponse(
             session_id=session_id,
-            subject=req.subject.upper(),
+            subjects=req.subjects,
             first_question=_format_question(first_q),
             total_available=total
         )

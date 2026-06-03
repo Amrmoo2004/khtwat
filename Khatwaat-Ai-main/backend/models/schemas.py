@@ -24,7 +24,7 @@ class AuthResponse(BaseModel):
 
 # ============ EXAM ============
 class StartExamRequest(BaseModel):
-    subject: str
+    subjects: List[str]
     max_questions: int = 20
     target_se: float = 0.3
     user_id: str
@@ -46,7 +46,7 @@ class QuestionResponse(BaseModel):
 
 class ExamStartResponse(BaseModel):
     session_id: str
-    subject: str
+    subjects: List[str]
     first_question: QuestionResponse
     total_available: int
 
@@ -61,7 +61,7 @@ class AnswerResponse(BaseModel):
 
 class ExamResultResponse(BaseModel):
     session_id: str
-    subject: str
+    subjects: List[str]
     total_questions: int
     correct_answers: int
     raw_percentage: float
