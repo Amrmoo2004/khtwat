@@ -23,6 +23,11 @@ const userSchema = new Schema({
     max: 60,
     required: false
   },
+  role: {
+    type: String,
+    enum: ['student', 'admin'],
+    default: 'student'
+  },
   phone: {
     type: String,
     required: true

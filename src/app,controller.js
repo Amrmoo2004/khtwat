@@ -8,6 +8,7 @@ import antiCheatRoutes from './modules/antiCheat/antiCheat.routes.js';
 import analyticsRoutes from './modules/analytics/analytics.routes.js';
 import recommendationsRoutes from './modules/recommendations/recommendations.routes.js';
 import communityRoutes from './modules/community/community.routes.js';
+import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
 import cors from 'cors';
 
 import swaggerUi from 'swagger-ui-express';
@@ -42,6 +43,9 @@ export const bootstrap = async () => {
 
     // Community routes
     app.use('/community', communityRoutes);
+
+    // Dashboard routes
+    app.use('/admin', dashboardRoutes);
 
     // Swagger API Documentation
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));

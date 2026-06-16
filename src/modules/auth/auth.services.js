@@ -25,7 +25,7 @@ export const login = async (req, res) => {
 
         // Generate token
         const token = jwt.sign(
-            { id: user._id, email: user.email, role: 'student' },
+            { id: user._id, email: user.email, role: user.role || 'student' },
             process.env.JWT_SECRET || 'super_secret_key_123',
             { expiresIn: '7d' }
         );
@@ -72,7 +72,7 @@ export const signup = async (req, res) => {
 
         // Generate token
         const token = jwt.sign(
-            { id: newUser._id, email: newUser.email, role: 'student' },
+            { id: newUser._id, email: newUser.email, role: newUser.role || 'student' },
             process.env.JWT_SECRET || 'super_secret_key_123',
             { expiresIn: '7d' }
         );

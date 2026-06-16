@@ -81,6 +81,24 @@ const options = {
           properties: {
             content: { type: 'string', example: 'I found solving past papers very helpful.' }
           }
+        },
+        AddQuestionRequest: {
+          type: 'object',
+          required: ['question_id', 'subject', 'text', 'options', 'correct_answer', 'irt_parameters'],
+          properties: {
+            question_id: { type: 'string', example: 'Q123' },
+            subject: { type: 'string', example: 'MATH' },
+            text: { type: 'string', example: 'What is 2+2?' },
+            options: { type: 'object', example: { A: '3', B: '4', C: '5', D: '6' } },
+            correct_answer: { type: 'string', example: 'B' },
+            irt_parameters: {
+              type: 'object',
+              properties: {
+                difficulty_b: { type: 'number', example: 0.5 },
+                discrimination_a: { type: 'number', example: 1.2 }
+              }
+            }
+          }
         }
       }
     },
@@ -344,6 +362,76 @@ const options = {
             content: { 'application/json': { schema: { $ref: '#/components/schemas/CreateCommentRequest' } } }
           },
           responses: { 201: { description: 'Comment added successfully' } }
+        }
+      },
+      '/admin/stats/general': {
+        get: {
+          summary: 'Get general statistics for dashboard',
+          tags: ['Admin Dashboard'],
+          security: [{ bearerAuth: [] }],
+          responses: { 200: { description: 'Returns general system stats' } }
+        }
+      },
+      '/admin/stats/questions': {
+        get: {
+          summary: 'Get statistics on hardest questions',
+          tags: ['Admin Dashboard'],
+          security: [{ bearerAuth: [] }],
+          responses: { 200: { description: 'Returns question stats' } }
+        }
+      },
+      '/admin/users': {
+        get: {
+          summary: 'Get all users paginated',
+          tags: ['Admin Dashboard'],
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            { name: 'page', in: 'query', schema: { type: 'integer', default: 1 } },
+            { name: 'limit', in: 'query', schema: { type: 'integer', default: 20 } }
+          ],
+          responses: { 200: { description: 'Returns users' } }
+        }
+      },
+      '/admin/questions': {
+        get: {
+          summary: 'Get all questions paginated',
+          tags: ['Admin Dashboard'],
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            { name: 'page', in: 'query', schema: { type: 'integer', default: 1 } },
+            { name: 'limit', in: 'query', schema: { type: 'integer', default: 20 } }
+          ],
+          responses: { 200: { description: 'Returns questions' } }
+        },
+        post: {
+          summary: 'Add a new question',
+          tags: ['Admin Dashboard'],
+          security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/AddQuestionRequest' } } }
+          },
+          responses: { 201: { description: 'Question created successfully' } }
+        }
+      },
+      '/admin/questions/{id}': {
+        put: {
+          summary: 'Update a question',
+          tags: ['Admin Dashboard'],
+          security: [{ bearerAuth: [] }],
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          requestBody: {
+            required: true,
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/AddQuestionRequest' } } }
+          },
+          responses: { 200: { description: 'Question updated successfully' } }
+        },
+        delete: {
+          summary: 'Delete a question',
+          tags: ['Admin Dashboard'],
+          security: [{ bearerAuth: [] }],
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { 200: { description: 'Question deleted successfully' } }
         }
       }
     }
